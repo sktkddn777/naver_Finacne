@@ -4,16 +4,20 @@ import time
 import urllib.request
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+import numpy as np
+
 
 driver = webdriver.Chrome()
-url = "https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page=1"
-driver.get(url)
-
+C_url = "https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page=1"
+driver.get(C_url)
+data = []
 for i in range(1, 32):
-    url = f"https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page={i}"
+    C_url = f"https://finance.naver.com/sise/sise_market_sum.nhn?sosok=0&page={i}"
 
     for j in range(2, 79): #2~78 : tr개수
-        html = driver.page_source
+        response = requests.get(C_url)
+        html = response.text
         soup = BeautifulSoup(html, 'html.parser')
         try:
             check = soup.select_one(f"#contentarea > div.box_type_l > table.type_2 > tbody > tr:nth-child({j}) > td:nth-child(2)")
@@ -27,15 +31,13 @@ for i in range(1, 32):
                 stock_PER = soup.select_one(f'div.box_type_l > table.type_2 > tbody > tr:nth-child({j}) > td:nth-child(11)').get_text()
                 stock_ROE = soup.select_one(f'div.box_type_l > table.type_2 > tbody > tr:nth-child({j}) > td:nth-child(12)').get_text()
                 driver.implicitly_wait(3)
-                print(stock_name + stock_price + stock_PER)
-                # url2 = 'https://finance.naver.com/'+stock_code['href']
-                # driver.get(url2)
-                # html = driver.page_source
-                # soup = BeautifulSoup(html, 'html.parser')
+                data.append([stock_name, stock_price, stock_trade, stock_PER, stock_ROE])
         except:
             pass
+        
 
-
+df = pd.DataFrame(data, columns = ["name", "price", "trade", "PER", "ROE"])
+print(df)
 
 
 
